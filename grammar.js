@@ -410,8 +410,16 @@ export default grammar({
 
     // Command-argument fragments stop before interpolation or quoted-string
     // starts so adjacent native arguments like `/flag:"$($x)"` can concatenate.
+    // Keep comment markers attached to '-' inside the token so comment extras
+    // cannot hide the rest of a pipeline.
     _command_argument_token: () =>
-      token(/[^\(\)\$\"\'\-\{\}@\|\[`\&\s][^\&\s\(\)\}\|;,\$\"\'`]*/),
+      token(seq(
+        choice(
+          /[^\(\)\$\"\'\-\{\}@\|\[`\&\s]/,
+          seq('-', psRegex(`[^${PS_PARAMETER_FIRST_CHARS}${PS_DECIMAL_DIGIT_CHARS}()$"'{}@|\\[\`&\\s.;,]`)),
+        ),
+        /[^\&\s\(\)\}\|;,\$\"\'`]*/,
+      )),
 
     // Command-mode status prefixes like `[!]` are generic arguments, not
     // type literals. Keep this to punctuation-only content so `[int]` still
@@ -997,6 +1005,7 @@ export default grammar({
         PREC.PARAM,
         choice(
           seq($.command_argument_sep, $.command_parameter),
+          seq($.command_argument_sep, alias('-', $.generic_token)),
           seq($.command_argument_sep, $.concatenated_command_argument),
           seq($.command_argument_sep, optional(alias($._command_argument_token, $.generic_token))),
           seq($.command_argument_sep, alias($._bracketed_generic_token, $.generic_token)),

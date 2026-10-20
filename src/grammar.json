@@ -2152,8 +2152,36 @@
     "_command_argument_token": {
       "type": "TOKEN",
       "content": {
-        "type": "PATTERN",
-        "value": "[^\\(\\)\\$\\\"\\'\\-\\{\\}@\\|\\[`\\&\\s][^\\&\\s\\(\\)\\}\\|;,\\$\\\"\\'`]*"
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "PATTERN",
+                "value": "[^\\(\\)\\$\\\"\\'\\-\\{\\}@\\|\\[`\\&\\s]"
+              },
+              {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "-"
+                  },
+                  {
+                    "type": "PATTERN",
+                    "value": "[^\\p{Lu}\\p{Ll}\\p{Lt}\\p{Lm}\\p{Lo}_?\\-\\p{Nd}()$\"'{}@|\\[`&\\s.;,]",
+                    "flags": "u"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "PATTERN",
+            "value": "[^\\&\\s\\(\\)\\}\\|;,\\$\\\"\\'`]*"
+          }
+        ]
       }
     },
     "_bracketed_generic_token": {
@@ -5138,6 +5166,24 @@
               {
                 "type": "SYMBOL",
                 "name": "command_parameter"
+              }
+            ]
+          },
+          {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "command_argument_sep"
+              },
+              {
+                "type": "ALIAS",
+                "content": {
+                  "type": "STRING",
+                  "value": "-"
+                },
+                "named": true,
+                "value": "generic_token"
               }
             ]
           },

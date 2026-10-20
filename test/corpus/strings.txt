@@ -121,6 +121,60 @@ toto
             (verbatim_here_string_characters)))))))
 
 ===
+Verbatim here string can be piped to a command reading standard input
+===
+
+@'
+x
+'@ | deno run -A -
+
+---
+
+(program
+  (statement_list
+    (pipeline
+      (pipeline_chain
+        (unary_expression
+          (string_literal
+            (verbatim_here_string_characters)))
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (generic_token)
+            (command_argument_sep)
+            (command_parameter)
+            (command_argument_sep)
+            (generic_token)))))))
+
+===
+Expandable here string can be piped to a command reading standard input
+===
+
+@"
+x
+"@ | deno run -A -
+
+---
+
+(program
+  (statement_list
+    (pipeline
+      (pipeline_chain
+        (unary_expression
+          (string_literal
+            (expandable_here_string_literal)))
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (generic_token)
+            (command_argument_sep)
+            (command_parameter)
+            (command_argument_sep)
+            (generic_token)))))))
+
+===
 Strings : verbatim here string empty
 ===
 

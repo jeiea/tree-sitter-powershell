@@ -487,3 +487,63 @@ git add -- file.txt
             (command_parameter)
             (command_argument_sep)
             (generic_token)))))))
+
+===
+Standalone dash arguments coexist with parameters and negative numbers
+===
+
+deno - -A -1 -- -; Get-Process
+
+---
+
+(program
+  (statement_list
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (generic_token)
+            (command_argument_sep)
+            (command_parameter)
+            (command_argument_sep)
+            (unary_expression
+              (expression_with_unary_operator
+                (unary_expression
+                  (integer_literal
+                    (decimal_integer_literal)))))
+            (command_argument_sep)
+            (command_parameter)
+            (command_argument_sep)
+            (generic_token)))))
+    (empty_statement)
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name))))))
+
+===
+Dash-prefixed arguments containing comment markers preserve the pipeline
+===
+
+Write-Output -#tag -<##>tag -/tmp/file.txt:tag | Get-Process
+
+---
+
+(program
+  (statement_list
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (generic_token)
+            (command_argument_sep)
+            (generic_token)
+            (command_argument_sep)
+            (generic_token)
+            (command_argument_sep)))
+        (command
+          (command_name))))))
