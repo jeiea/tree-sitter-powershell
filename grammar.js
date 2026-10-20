@@ -17,6 +17,7 @@ const PS_VARIABLE_CHARS = PS_IDENTIFIER_FOLLOW_CHARS;
 const PS_COMMAND_NAME_CHARS = `${PS_VARIABLE_CHARS}?`;
 const PS_PARAMETER_FIRST_CHARS = `${PS_IDENTIFIER_START_CHARS}?\\-`;
 const PS_PARAMETER_FOLLOW_CHARS = '^\\{\\}\\(\\);,\\|&\\.\\[:\\s';
+const PS_COMMAND_ARGUMENT_TAIL = /[^\&\s\(\)\}\|;,\$\"\'`]*/;
 const PS_DOLLAR_LITERAL_START_CHARS = `({${PS_COMMAND_NAME_CHARS}\\$\\^"\``;
 
 /** @param {string} pattern */
@@ -418,8 +419,11 @@ export default grammar({
           /[^\(\)\$\"\'\-\{\}@\|\[`\&\s]/,
           seq('-', psRegex(`[^${PS_PARAMETER_FIRST_CHARS}${PS_DECIMAL_DIGIT_CHARS}()$"'{}@|\\[\`&\\s.;,]`)),
         ),
-        /[^\&\s\(\)\}\|;,\$\"\'`]*/,
+        PS_COMMAND_ARGUMENT_TAIL,
       )),
+
+    _dash_prefixed_argument: () =>
+      seq('-', token(seq(psRegex(`[${PS_DECIMAL_DIGIT_CHARS}.]`), PS_COMMAND_ARGUMENT_TAIL))),
 
     // Command-mode status prefixes like `[!]` are generic arguments, not
     // type literals. Keep this to punctuation-only content so `[int]` still
@@ -996,7 +1000,7 @@ export default grammar({
 
     // Generic token is hard to manage
     // So a definition is that a generic token must have to begin by one or more space char
-    command_argument_sep: ($) => prec.right(choice(repeat1(' '), ':')),
+    command_argument_sep: ($) => prec.right(choice(repeat1(/[ \t]/), ':')),
 
     // Adapt the grammar to have same behavior
 
@@ -1006,6 +1010,7 @@ export default grammar({
         choice(
           seq($.command_argument_sep, $.command_parameter),
           seq($.command_argument_sep, alias('-', $.generic_token)),
+          seq($.command_argument_sep, alias($._dash_prefixed_argument, $.generic_token)),
           seq($.command_argument_sep, $.concatenated_command_argument),
           seq($.command_argument_sep, optional(alias($._command_argument_token, $.generic_token))),
           seq($.command_argument_sep, alias($._bracketed_generic_token, $.generic_token)),

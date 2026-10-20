@@ -547,3 +547,78 @@ Write-Output -#tag -<##>tag -/tmp/file.txt:tag | Get-Process
             (command_argument_sep)))
         (command
           (command_name))))))
+
+===
+Dash-prefixed file arguments preserve following commands
+===
+
+deno run -A -1foo -.config | Get-Process
+
+---
+
+(program
+  (statement_list
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (generic_token)
+            (command_argument_sep)
+            (command_parameter)
+            (command_argument_sep)
+            (generic_token)
+            (command_argument_sep)
+            (generic_token)
+            (command_argument_sep)))
+        (command
+          (command_name))))))
+
+===
+Dash arguments separated by spaces or tabs stay distinct from numeric arguments
+===
+
+deno - 1foo -	.config -1kb -1.5 -0xff -1e3 -1foo
+
+---
+
+(program
+  (statement_list
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (generic_token)
+            (command_argument_sep)
+            (generic_token)
+            (command_argument_sep)
+            (generic_token)
+            (command_argument_sep)
+            (generic_token)
+            (command_argument_sep)
+            (unary_expression
+              (expression_with_unary_operator
+                (unary_expression
+                  (integer_literal
+                    (decimal_integer_literal)))))
+            (command_argument_sep)
+            (unary_expression
+              (expression_with_unary_operator
+                (unary_expression
+                  (real_literal))))
+            (command_argument_sep)
+            (unary_expression
+              (expression_with_unary_operator
+                (unary_expression
+                  (integer_literal
+                    (hexadecimal_integer_literal)))))
+            (command_argument_sep)
+            (unary_expression
+              (expression_with_unary_operator
+                (unary_expression
+                  (real_literal))))
+            (command_argument_sep)
+            (generic_token)))))))

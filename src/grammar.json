@@ -2184,6 +2184,32 @@
         ]
       }
     },
+    "_dash_prefixed_argument": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "-"
+        },
+        {
+          "type": "TOKEN",
+          "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "PATTERN",
+                "value": "[\\p{Nd}.]",
+                "flags": "u"
+              },
+              {
+                "type": "PATTERN",
+                "value": "[^\\&\\s\\(\\)\\}\\|;,\\$\\\"\\'`]*"
+              }
+            ]
+          }
+        }
+      ]
+    },
     "_bracketed_generic_token": {
       "type": "TOKEN",
       "content": {
@@ -5139,8 +5165,8 @@
           {
             "type": "REPEAT1",
             "content": {
-              "type": "STRING",
-              "value": " "
+              "type": "PATTERN",
+              "value": "[ \\t]"
             }
           },
           {
@@ -5181,6 +5207,24 @@
                 "content": {
                   "type": "STRING",
                   "value": "-"
+                },
+                "named": true,
+                "value": "generic_token"
+              }
+            ]
+          },
+          {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "command_argument_sep"
+              },
+              {
+                "type": "ALIAS",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "_dash_prefixed_argument"
                 },
                 "named": true,
                 "value": "generic_token"
