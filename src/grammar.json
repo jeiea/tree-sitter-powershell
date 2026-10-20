@@ -2200,11 +2200,11 @@
       }
     },
     "command_parameter": {
-      "type": "TOKEN",
-      "content": {
-        "type": "CHOICE",
-        "members": [
-          {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "TOKEN",
+          "content": {
             "type": "SEQ",
             "members": [
               {
@@ -2217,13 +2217,17 @@
                 "flags": "u"
               }
             ]
-          },
-          {
+          }
+        },
+        {
+          "type": "PREC",
+          "value": 7,
+          "content": {
             "type": "STRING",
             "value": "--"
           }
-        ]
-      }
+        }
+      ]
     },
     "_verbatim_command_argument_chars": {
       "type": "REPEAT1",
@@ -5124,6 +5128,19 @@
       "content": {
         "type": "CHOICE",
         "members": [
+          {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "command_argument_sep"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "command_parameter"
+              }
+            ]
+          },
           {
             "type": "SEQ",
             "members": [

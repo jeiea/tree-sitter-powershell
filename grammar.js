@@ -431,7 +431,11 @@ export default grammar({
 
     // Parameters
     command_parameter: ($) =>
-      token(choice(seq(/-+/, psRegex(`[${PS_PARAMETER_FIRST_CHARS}][${PS_PARAMETER_FOLLOW_CHARS}]*`)), '--')),
+      choice(
+        token(seq(/-+/, psRegex(`[${PS_PARAMETER_FIRST_CHARS}][${PS_PARAMETER_FOLLOW_CHARS}]*`))),
+        // Share the decrement token, but prefer the parameter in command mode.
+        prec(PREC.PARAM + 1, '--'),
+      ),
 
     _verbatim_command_argument_chars: ($) =>
       repeat1(choice(/"[^"]*"/, /&[^&]*/, /[^\|\r\n]+/)),
@@ -992,6 +996,7 @@ export default grammar({
       prec.right(
         PREC.PARAM,
         choice(
+          seq($.command_argument_sep, $.command_parameter),
           seq($.command_argument_sep, $.concatenated_command_argument),
           seq($.command_argument_sep, optional(alias($._command_argument_token, $.generic_token))),
           seq($.command_argument_sep, alias($._bracketed_generic_token, $.generic_token)),

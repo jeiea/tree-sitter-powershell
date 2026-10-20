@@ -1122,6 +1122,11 @@
     }
   },
   {
+    "type": "command_parameter",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "comparison_argument_expression",
     "named": true,
     "fields": {},
@@ -3372,6 +3377,10 @@
           "named": true
         },
         {
+          "type": "command_parameter",
+          "named": true
+        },
+        {
           "type": "concatenated_command_argument",
           "named": true
         },
@@ -5113,10 +5122,6 @@
   {
     "type": "clean",
     "named": false
-  },
-  {
-    "type": "command_parameter",
-    "named": true
   },
   {
     "type": "comment",
