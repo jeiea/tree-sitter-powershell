@@ -5152,10 +5152,6 @@
         ]
       }
     },
-    "stop_parsing": {
-      "type": "PATTERN",
-      "value": "--%[^\\r\\n]*"
-    },
     "command_argument_sep": {
       "type": "PREC_RIGHT",
       "value": 0,
@@ -8801,6 +8797,10 @@
     {
       "type": "SYMBOL",
       "name": "_expandable_string_immcontent"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "stop_parsing"
     }
   ],
   "inline": [],

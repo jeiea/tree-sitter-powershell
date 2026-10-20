@@ -56,6 +56,7 @@ export default grammar({
     $._attribute_statement_boundary,
     $._for_clause_break,
     $._expandable_string_immcontent,
+    $.stop_parsing,
   ],
 
   extras: ($) => [
@@ -994,9 +995,6 @@ export default grammar({
           $.stop_parsing,
         ),
       ),
-
-    // Stop parsing is a token that end the parsing of command line
-    stop_parsing: ($) => /--%[^\r\n]*/,
 
     // Generic token is hard to manage
     // So a definition is that a generic token must have to begin by one or more space char

@@ -1,0 +1,269 @@
+===
+Stop parsing preserves the next pipeline command
+===
+
+git --% status | Get-Item x
+
+---
+
+(program
+  (statement_list
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (stop_parsing)))
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (generic_token)))))))
+
+===
+Stop parsing preserves conditional command chains
+===
+
+git --% status || Get-Item x
+git --% status && Get-Item x
+
+---
+
+(program
+  (statement_list
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (stop_parsing))))
+      (pipeline_chain_tail)
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (generic_token)))))
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (stop_parsing))))
+      (pipeline_chain_tail)
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (generic_token)))))))
+
+===
+Stop parsing keeps literal syntax and quoted separators in one argument
+===
+
+git --% a&b ; $(Get-Item x) >out "a|b&&c" “d|e” | Get-Item x
+
+---
+
+(program
+  (statement_list
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (stop_parsing)))
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (generic_token)))))))
+
+===
+Stop parsing ignores backtick escapes and single quotes at pipeline boundaries
+===
+
+git --% status `| Get-Item x
+git --% 'status | Get-Item x
+
+---
+
+(program
+  (statement_list
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (stop_parsing)))
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (generic_token)))))
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (stop_parsing)))
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (generic_token)))))))
+
+===
+Stop parsing ends at newlines despite backticks or unmatched quotes
+===
+
+git --% status `
+Get-Item x
+git --% "status | text
+Get-Item x
+
+---
+
+(program
+  (statement_list
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (stop_parsing)))))
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (generic_token)))))
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (stop_parsing)))))
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (generic_token)))))))
+
+===
+Arguments beginning with the stop parsing marker still expose nested commands
+===
+
+git --%foo $(Get-Item x)
+
+---
+
+(program
+  (statement_list
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (command_parameter)
+            (command_argument_sep)
+            (unary_expression
+              (sub_expression
+                (statement_list
+                  (pipeline
+                    (pipeline_chain
+                      (command
+                        (command_name)
+                        (command_elements
+                          (command_argument_sep)
+                          (generic_token))))))))))))))
+
+===
+Unicode whitespace after the stop parsing marker keeps substitutions literal
+===
+
+git --%$(next)
+git --% $(next)
+git --% $(next)
+
+---
+
+(program
+  (statement_list
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (stop_parsing)))))
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (stop_parsing)))))
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (stop_parsing)))))))
+
+===
+Format characters after a marker prefix do not activate stop parsing
+===
+
+git --%​$(next)
+git --%⁠$(next)
+git --%﻿$(next)
+
+---
+
+(program
+  (statement_list
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (command_parameter)
+            (argument_list
+              (ERROR
+                (simple_name)))))))
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (command_parameter)
+            (argument_list
+              (ERROR
+                (simple_name)))))))
+    (pipeline
+      (pipeline_chain
+        (command
+          (command_name)
+          (command_elements
+            (command_argument_sep)
+            (command_parameter)
+            (argument_list
+              (ERROR
+                (simple_name)))))))))

@@ -9,13 +9,18 @@ enum TOKEN_TYPE {
     ATTRIBUTE_STATEMENT_BOUNDARY,
     FOR_CLAUSE_BREAK,
     EXPANDABLE_STRING_IMMCONTENT,
+    STOP_PARSING,
 };
 
 enum UnicodeCodePoint {
+    UNICODE_NEXT_LINE = 0x0085,
     UNICODE_NO_BREAK_SPACE = 0x00A0,
     UNICODE_OGHAM_SPACE_MARK = 0x1680,
     UNICODE_EN_QUAD = 0x2000,
+    UNICODE_HAIR_SPACE = 0x200A,
     UNICODE_ZERO_WIDTH_SPACE = 0x200B,
+    UNICODE_LINE_SEPARATOR = 0x2028,
+    UNICODE_PARAGRAPH_SEPARATOR = 0x2029,
     UNICODE_NARROW_NO_BREAK_SPACE = 0x202F,
     UNICODE_MEDIUM_MATHEMATICAL_SPACE = 0x205F,
     UNICODE_WORD_JOINER = 0x2060,
@@ -444,6 +449,82 @@ static bool scan_expandable_string_immcontent(TSLexer *lexer, const bool *valid_
     return true;
 }
 
+static bool is_powershell_whitespace(int32_t lookahead)
+{
+    if ((lookahead >= '\t' && lookahead <= '\r') ||
+        (lookahead >= UNICODE_EN_QUAD && lookahead <= UNICODE_HAIR_SPACE)) {
+        return true;
+    }
+    switch (lookahead) {
+        case ' ':
+        case UNICODE_NEXT_LINE:
+        case UNICODE_NO_BREAK_SPACE:
+        case UNICODE_OGHAM_SPACE_MARK:
+        case UNICODE_LINE_SEPARATOR:
+        case UNICODE_PARAGRAPH_SEPARATOR:
+        case UNICODE_NARROW_NO_BREAK_SPACE:
+        case UNICODE_MEDIUM_MATHEMATICAL_SPACE:
+        case UNICODE_IDEOGRAPHIC_SPACE:
+            return true;
+        default:
+            return false;
+    }
+}
+
+static bool is_stop_parsing_marker_end(int32_t lookahead)
+{
+    if (is_powershell_whitespace(lookahead) || is_statement_boundary_lookahead(lookahead)) {
+        return true;
+    }
+    return lookahead == '(' || lookahead == '{' || lookahead == ',' || lookahead == '|' || lookahead == '&';
+}
+
+static bool is_double_quote(int32_t lookahead)
+{
+    return lookahead == '"' || lookahead == 0x201C || lookahead == 0x201D || lookahead == 0x201E;
+}
+
+static bool scan_stop_parsing(TSLexer *lexer, const bool *valid_symbols)
+{
+    if (!valid_symbols[STOP_PARSING] ||
+        (valid_symbols[STATEMENT_BOUNDARY] && valid_symbols[FOR_CLAUSE_BREAK])) {
+        return false;
+    }
+
+    const char *marker = "--%";
+    for (unsigned i = 0; marker[i] != '\0'; i++) {
+        if (lexer->lookahead != marker[i]) {
+            return false;
+        }
+        lexer->advance(lexer, false);
+    }
+    if (!is_stop_parsing_marker_end(lexer->lookahead)) {
+        return false;
+    }
+
+    bool in_quotes = false;
+    lexer->result_symbol = STOP_PARSING;
+    lexer->mark_end(lexer);
+    while (lexer->lookahead != 0 && !is_newline(lexer->lookahead)) {
+        if (!in_quotes && lexer->lookahead == '|') {
+            break;
+        }
+        if (!in_quotes && lexer->lookahead == '&') {
+            lexer->advance(lexer, false);
+            if (lexer->lookahead == '&') {
+                break;
+            }
+        } else {
+            if (is_double_quote(lexer->lookahead)) {
+                in_quotes = !in_quotes;
+            }
+            lexer->advance(lexer, false);
+        }
+        lexer->mark_end(lexer);
+    }
+    return true;
+}
+
 /* --- API Implementation --- */
 
 bool tree_sitter_powershell_external_scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbols)
@@ -452,6 +533,9 @@ bool tree_sitter_powershell_external_scanner_scan(void *payload, TSLexer *lexer,
 
     if (scan_expandable_string_immcontent(lexer, valid_symbols)) {
         return true;
+    }
+    if (valid_symbols[STOP_PARSING] && lexer->lookahead == '-') {
+        return scan_stop_parsing(lexer, valid_symbols);
     }
     if (valid_symbols[ATTRIBUTE_STATEMENT_BOUNDARY]) {
         return scan_attribute_statement_boundary(lexer);
